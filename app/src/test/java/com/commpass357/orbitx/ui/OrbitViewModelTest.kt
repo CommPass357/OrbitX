@@ -53,10 +53,17 @@ class OrbitViewModelTest {
     fun predictionToggleControlsPaths() {
         val viewModel = OrbitViewModel()
 
-        viewModel.togglePrediction()
-        assertTrue(viewModel.uiState.predictionPaths.isEmpty())
+        assertFalse(viewModel.uiState.showPrediction)
 
         viewModel.togglePrediction()
+        assertTrue(viewModel.uiState.showPrediction)
+        assertTrue(viewModel.uiState.predictionPaths.isEmpty())
+
+        viewModel.onFrame(0.2)
         assertTrue(viewModel.uiState.predictionPaths.isNotEmpty())
+
+        viewModel.togglePrediction()
+        assertFalse(viewModel.uiState.showPrediction)
+        assertTrue(viewModel.uiState.predictionPaths.isEmpty())
     }
 }

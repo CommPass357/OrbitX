@@ -42,7 +42,7 @@ class SimulationEngine(
     }
 
     fun stepSeconds(seconds: Double, timeScaleDaysPerSecond: Double) {
-        val days = (seconds * timeScaleDaysPerSecond).coerceIn(0.0, 96.0)
+        val days = (seconds * timeScaleDaysPerSecond).coerceIn(0.0, 8.0)
         stepDays(days)
     }
 
@@ -144,16 +144,26 @@ class SimulationEngine(
 
     fun predictTrajectories(
         selectedId: Long?,
-        horizonDays: Double = 620.0,
-        sampleEveryDays: Double = 7.0
+        horizonDays: Double = 220.0,
+        sampleEveryDays: Double = 14.0
     ): Map<Long, List<Vector2>> {
+        val selected = selectedId?.let(::body)
+        val majorBodies = bodies
+            .filter {
+                it.type == BodyType.Star ||
+                    it.type == BodyType.Planet ||
+                    it.type == BodyType.DwarfPlanet ||
+                    it.id == selectedId
+            }
+            .sortedWith(compareByDescending<BodyState> { it.id == selectedId }.thenByDescending { it.mass })
+            .take(14)
+        val predictionBodies = (majorBodies + listOfNotNull(selected)).distinctBy { it.id }
         val simulated = SimulationEngine(
-            initialBodies = bodies.map { it.copy(trail = emptyList()) },
-            settings = settings.copy(trailLimit = 0),
+            initialBodies = predictionBodies.map { it.copy(trail = emptyList()) },
+            settings = settings.copy(fixedStepDays = 4.0, trailLimit = 0),
             initialTimeDays = timeDays
         )
-        val trackedIds = bodies
-            .filter { it.id == selectedId || it.type != BodyType.Asteroid && it.type != BodyType.Fragment }
+        val trackedIds = predictionBodies
             .map { it.id }
             .toSet()
         val paths = trackedIds.associateWith { mutableListOf<Vector2>() }.toMutableMap()

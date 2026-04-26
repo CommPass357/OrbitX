@@ -20,10 +20,10 @@ data class BodyState(
 data class SimulationSettings(
     val gravitationalConstant: Double = 2.9591220828559093e-4,
     val softening: Double = 0.0015,
-    val fixedStepDays: Double = 0.18,
-    val trailLimit: Int = 180,
+    val fixedStepDays: Double = 0.75,
+    val trailLimit: Int = 96,
     val escapeRadius: Double = 64.0,
-    val maxBodies: Int = 180
+    val maxBodies: Int = 140
 )
 
 data class SimulationEvent(

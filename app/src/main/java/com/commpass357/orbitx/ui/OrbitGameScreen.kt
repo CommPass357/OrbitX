@@ -260,7 +260,7 @@ private fun OrbitCanvas(
         drawRect(Color(0xFF050711))
         drawStars(stars)
         drawPrediction(state, camera, size)
-        if (state.showTrails) drawTrails(state.snapshot.bodies, camera, size)
+        if (state.showTrails) drawTrails(state.snapshot.bodies, state.selectedId, camera, size)
         drawBodies(state.snapshot.bodies, state.selectedId, camera, size)
         drawVelocityHandle(state.selectedBody, state.activeTool, camera, size)
     }
@@ -283,11 +283,11 @@ private fun DrawScope.drawPrediction(state: OrbitUiState, camera: OrbitCamera, c
         if (points.size < 2) return@forEach
         val selected = id == state.selectedId
         val color = if (selected) Color(0xFFFFF2A8) else Color(0xFF7ED7FF).copy(alpha = 0.28f)
-        points.zipWithNext().forEach { (a, b) ->
+        for (index in 0 until points.lastIndex) {
             drawLine(
                 color = color,
-                start = worldToScreen(a, canvasSize, camera),
-                end = worldToScreen(b, canvasSize, camera),
+                start = worldToScreen(points[index], canvasSize, camera),
+                end = worldToScreen(points[index + 1], canvasSize, camera),
                 strokeWidth = if (selected) 2.4f else 1.1f,
                 cap = StrokeCap.Round,
                 pathEffect = dash
@@ -296,16 +296,23 @@ private fun DrawScope.drawPrediction(state: OrbitUiState, camera: OrbitCamera, c
     }
 }
 
-private fun DrawScope.drawTrails(bodies: List<BodyState>, camera: OrbitCamera, canvasSize: IntSize) {
+private fun DrawScope.drawTrails(
+    bodies: List<BodyState>,
+    selectedId: Long?,
+    camera: OrbitCamera,
+    canvasSize: IntSize
+) {
     bodies.forEach { body ->
         if (body.trail.size < 2) return@forEach
+        if ((body.type == BodyType.Asteroid || body.type == BodyType.Fragment) && body.id != selectedId) return@forEach
         val color = Color(body.colorArgb).copy(alpha = if (body.type == BodyType.Asteroid) 0.18f else 0.34f)
-        body.trail.zipWithNext().forEachIndexed { index, pair ->
-            val alpha = ((index + 1f) / body.trail.size).coerceIn(0.18f, 1f)
+        val trail = body.trail.takeLast(72)
+        for (index in 0 until trail.lastIndex) {
+            val alpha = ((index + 1f) / trail.size).coerceIn(0.18f, 1f)
             drawLine(
                 color = color.copy(alpha = color.alpha * alpha),
-                start = worldToScreen(pair.first, canvasSize, camera),
-                end = worldToScreen(pair.second, canvasSize, camera),
+                start = worldToScreen(trail[index], canvasSize, camera),
+                end = worldToScreen(trail[index + 1], canvasSize, camera),
                 strokeWidth = if (body.type == BodyType.Asteroid) 0.8f else 1.4f,
                 cap = StrokeCap.Round
             )

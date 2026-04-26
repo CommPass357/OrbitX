@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "OrbitX"
-include(":app")
+rootProject.name = 'OrbitX'
+include ':app'
